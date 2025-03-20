@@ -125,6 +125,103 @@ public class LeetCode {
         return dummy.next;
     }
 
+    // https://leetcode.com/explore/learn/card/linked-list/219/classic-problems/1205/
+    public ListNode reverseList(ListNode head) {
+        ListNode prev = null;
+        ListNode current = head;
+
+        while (current != null) {
+            ListNode nextTemp = current.next;
+            current.next = prev;
+            prev = current;
+            current = nextTemp;
+        }
+
+        return prev;
+    }
+
+    // https://leetcode.com/explore/learn/card/linked-list/219/classic-problems/1207/
+    public ListNode removeElements(ListNode head, int val) {
+        // Handle empty list
+        if (head == null)
+            return null;
+
+        // Create dummy node to handle cases where head needs to be removed
+        ListNode dummy = new ListNode(0);
+        dummy.next = head;
+        ListNode current = dummy;
+
+        while (current.next != null) {
+            if (current.next.val == val) {
+                current.next = current.next.next;
+            } else {
+                current = current.next;
+            }
+        }
+
+        return dummy.next;
+    }
+
+    // https://leetcode.com/explore/learn/card/linked-list/219/classic-problems/1208/
+    public ListNode oddEvenList(ListNode head) {
+
+        if (head == null || head.next == null) {
+            return head;
+        }
+
+        // First node is considered odd (index 1)
+        ListNode odd = head;
+        // Second node is even (index 2)
+        ListNode even = head.next;
+        // Keep track of even head to connect later
+        ListNode evenHead = even;
+
+        while (even != null && even.next != null) {
+            // Connect odd nodes
+            odd.next = even.next;
+            odd = odd.next;
+
+            // Connect even nodes
+            even.next = odd.next;
+            even = even.next;
+        }
+
+        // Connect odd list with even list
+        odd.next = evenHead;
+
+        return head;
+    }
+
+    // https://leetcode.com/explore/learn/card/linked-list/219/classic-problems/1209/
+    /**
+     * use stack, push all node, then pop and compare with head
+     */
+    public boolean isPalindrome(ListNode head) {
+        if (head == null || head.next == null) {
+            return true;
+        }
+
+        ListNode slow = head;
+        ListNode fast = head;
+        while (fast.next != null && fast.next.next != null) {
+            slow = slow.next;
+            fast = fast.next.next;
+        }
+
+        ListNode secondHalf = reverseList(slow.next);
+
+        ListNode firstHalf = head;
+        while (secondHalf != null) {
+            if (firstHalf.val != secondHalf.val) {
+                return false;
+            }
+            firstHalf = firstHalf.next;
+            secondHalf = secondHalf.next;
+        }
+
+        return true;
+    }
+
     public static void main(String[] args) {
         LeetCode lc = new LeetCode();
         // int[] nums = {3, 2, 3, 2, 2, 2};
