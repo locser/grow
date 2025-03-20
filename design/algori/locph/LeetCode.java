@@ -36,11 +36,13 @@ public class LeetCode {
      * https://leetcode.com/problems/longest-nice-subarray/?envType=daily-question&envId=2025-03-18
      * In binary operations:
      * <p>
-     * - The ^ (bitwise XOR) operator compares each bit of the first operand with the corresponding bit of the second operand
+     * - The ^ (bitwise XOR) operator compares each bit of the first operand with
+     * the corresponding bit of the second operand
      * - If the bits are different (one is 0 and one is 1), the result is 1
      * - If the bits are the same (both 0 or both 1), the result is 0
      * <p>
-     * - The | (bitwise OR) operator compares each bit of the first operand with the corresponding bit of the second operand
+     * - The | (bitwise OR) operator compares each bit of the first operand with the
+     * corresponding bit of the second operand
      * - If either bit is 1, the resulting bit is 1. Otherwise, it's 0
      * <p>
      * <p>
@@ -76,7 +78,7 @@ public class LeetCode {
 
     }
 
-    //    https://leetcode.com/problems/minimum-operations-to-make-binary-array-elements-equal-to-one-i/?envType=daily-question&envId=2025-03-19
+    // https://leetcode.com/problems/minimum-operations-to-make-binary-array-elements-equal-to-one-i/?envType=daily-question&envId=2025-03-19
     public int minOperations(int[] nums) {
         int count = 0;
         int n = nums.length;
@@ -92,12 +94,43 @@ public class LeetCode {
         return (nums[n - 2] == 1 && nums[n - 1] == 1) ? count : -1;
     }
 
+    // https://leetcode.com/explore/learn/card/linked-list/214/two-pointer-technique/1296/
+    public ListNode removeNthFromEnd(ListNode head, int n) {
+        // Handle empty list
+        if (head == null) {
+            return null;
+        }
+
+        // Create dummy node to handle edge cases
+        ListNode dummy = new ListNode(0);
+        dummy.next = head;
+
+        ListNode fast = dummy;
+        ListNode slow = dummy;
+
+        // Move fast pointer n steps ahead
+        for (int i = 0; i <= n; i++) {
+            fast = fast.next;
+        }
+
+        // Move both pointers until fast reaches end
+        while (fast != null) {
+            fast = fast.next;
+            slow = slow.next;
+        }
+
+        // Remove the nth node
+        slow.next = slow.next.next;
+
+        return dummy.next;
+    }
+
     public static void main(String[] args) {
         LeetCode lc = new LeetCode();
-//        int[] nums = {3, 2, 3, 2, 2, 2};
-//        System.out.println(lc.divideArray(nums));
+        // int[] nums = {3, 2, 3, 2, 2, 2};
+        // System.out.println(lc.divideArray(nums));
 
-        int[] nums = {1, 3, 8, 48, 10};
+        int[] nums = { 1, 3, 8, 48, 10 };
         System.out.println(lc.longestNiceSubarray(nums));
     }
 }
