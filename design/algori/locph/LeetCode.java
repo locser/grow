@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.w3c.dom.Node;
+
 public class LeetCode {
 
     /**
@@ -193,6 +195,7 @@ public class LeetCode {
     }
 
     // https://leetcode.com/explore/learn/card/linked-list/219/classic-problems/1209/
+
     /**
      * use stack, push all node, then pop and compare with head
      */
@@ -220,6 +223,149 @@ public class LeetCode {
         }
 
         return true;
+    }
+
+    // https://leetcode.com/explore/learn/card/linked-list/213/conclusion/1227/
+    public ListNode mergeTwoLists(ListNode list1, ListNode list2) {
+        // Handle edge cases where either list is null
+        if (list1 == null)
+            return list2;
+        if (list2 == null)
+            return list1;
+
+        // Create dummy node to handle edge cases
+        ListNode dummy = new ListNode(0);
+        ListNode current = dummy;
+
+        // Compare and merge nodes
+        while (list1 != null && list2 != null) {
+            if (list1.val <= list2.val) {
+                current.next = list1;
+                list1 = list1.next;
+            } else {
+                current.next = list2;
+                list2 = list2.next;
+            }
+            current = current.next;
+        }
+
+        // Attach remaining nodes if any
+        if (list1 != null) {
+            current.next = list1;
+        }
+        if (list2 != null) {
+            current.next = list2;
+        }
+
+        return dummy.next;
+    }
+
+    // public ListNode mergeTwoLists2(ListNode list1, ListNode list2) {
+    // if (list1 == null || list2 == null) {
+    // return list1 != null ? list1 : list2;
+    // }
+    // ListNode result = new ListNode(0);
+    // ListNode current = result;
+    // while (list1.next != null && list2.next != null) {
+    // if (list1.next.val == list2.next.val) {
+    // current.next = list1.next;
+    // current.next.next = list2.next;
+    // list1 = list1.next;
+    // list2 = list2.next;
+    // current = current.next.next;
+    // } else {
+    // if (list1.next.val < list2.next.val) {
+    // current.next = list1.next;
+    // list1 = list1.next;
+    // current = current.next;
+    // } else {
+    // current.next = list2.next;
+    // list2 = list2.next;
+    // current = current.next;
+    // }
+    // }
+    // }
+    // if (list1.next != null) {
+    // current.next = list1.next;
+    // }
+    // if (list2.next != null) {
+    // current.next = list2.next;
+    // }
+    // return result.next;
+    // }
+
+    // https://leetcode.com/explore/learn/card/linked-list/213/conclusion/1228/
+    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
+        ListNode dummy = new ListNode(0);
+        ListNode current = dummy;
+        int carry = 0;
+
+        // Continue while there are digits to process
+        while (l1 != null || l2 != null || carry > 0) {
+            int sum = carry;
+
+            // Add l1 digit if exists
+            if (l1 != null) {
+                sum += l1.val;
+                l1 = l1.next;
+            }
+
+            // Add l2 digit if exists
+            if (l2 != null) {
+                sum += l2.val;
+                l2 = l2.next;
+            }
+
+            // Calculate new digit and carry
+            carry = sum / 10;
+            current.next = new ListNode(sum % 10);
+            current = current.next;
+        }
+
+        return dummy.next;
+    }
+
+    /**
+     * https://leetcode.com/explore/learn/card/linked-list/213/conclusion/1225/
+     * class Node {
+     * public int val;
+     * public Node prev;
+     * public Node next;
+     * public Node child;
+     * };
+     *
+     * 
+     */
+    public Node flatten(Node head) {
+        if (head == null)
+            return null;
+
+        Node current = head;
+        while (current != null) {
+            if (current.child != null) {
+                Node next = current.next;
+                Node child = flatten(current.child);
+
+                // Connect current with child
+                current.next = child;
+                child.prev = current;
+                current.child = null;
+
+                // Find the end of child list
+                while (child.next != null) {
+                    child = child.next;
+                }
+
+                // Connect child end with next
+                if (next != null) {
+                    child.next = next;
+                    next.prev = child;
+                }
+            }
+            current = current.next;
+        }
+
+        return head;
     }
 
     public static void main(String[] args) {
