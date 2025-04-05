@@ -334,7 +334,7 @@ public class LeetCode {
      * public Node child;
      * };
      *
-     * 
+     *
      */
     public Node flatten(Node head) {
         if (head == null)
@@ -364,6 +364,38 @@ public class LeetCode {
             }
             current = current.next;
         }
+
+        return head;
+    }
+
+    // https://leetcode.com/explore/learn/card/linked-list/213/conclusion/1295/
+    /**
+     *
+     */
+    public ListNode rotateRight(ListNode head, int k) {
+        if (head == null || head.next == null || k == 0)
+            return head;
+
+        ListNode curr = head;
+        int length = 1;
+        while (curr.next != null) {
+            curr = curr.next;
+            length++;
+        }
+
+        curr.next = head;
+        // - Vì xoay length lần sẽ trở về vị trí ban đầu
+        // - Nên chỉ cần xoay k % length lần
+        k = k % length;
+
+        curr = head;
+
+        for (int i = 1; i < length - k; i++) {
+            curr = curr.next;
+        }
+
+        head = curr.next;
+        curr.next = null;
 
         return head;
     }
