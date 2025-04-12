@@ -400,6 +400,49 @@ public class LeetCode {
         return head;
     }
 
+    // https://leetcode.com/problems/reverse-nodes-in-k-group/
+    public ListNode reverseKGroup(ListNode head, int k) {
+        if (head == null || head.next == null || k == 1) {
+            return head;
+        }
+
+        ListNode dummy = new ListNode(0);
+        dummy.next = head;
+
+        ListNode prev = dummy;
+        ListNode curr = head;
+
+        while (curr != null) {
+            int count = 0;
+            while (curr != null && count < k) {
+                curr = curr.next;
+                count++;
+            }
+
+            if (count == k) {
+                prev = reverse(prev, curr);
+                curr = prev.next;
+            }
+        }
+
+        return dummy.next;
+    }
+
+    //https://leetcode.com/problems/minimum-operations-to-make-array-values-equal-to-k/?envType=daily-question&envId=2025-04-09
+    public int minOperations(int[] nums, int k) {
+        Set<Integer> st = new HashSet<>();
+        for (int x : nums) {
+            if (x < k) {
+                return -1;
+            } else if (x > k) {
+                st.add(x);
+            }
+        }
+        return st.size();
+    }
+
+
+
     public static void main(String[] args) {
         LeetCode lc = new LeetCode();
         // int[] nums = {3, 2, 3, 2, 2, 2};
