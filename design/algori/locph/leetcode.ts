@@ -159,3 +159,46 @@ function romanToInt(s: string): number {
 
   return sum;
 }
+
+//https://leetcode.com/problems/longest-common-prefix/
+function longestCommonPrefix(strs: string[]): string {
+  if (strs.length === 1) return strs[0];
+  const shortestLength = strs.reduce(
+    (minLength, currentString) => Math.min(minLength, currentString.length),
+    Infinity
+  );
+
+  for (let i = shortestLength; i > 0; i--) {
+    const str = strs[0].substring(0, i);
+    const result = strs.every((currentString) => currentString.startsWith(str));
+
+    if (result) return str;
+  }
+
+  return "";
+}
+
+// https://leetcode.com/problems/valid-parentheses/
+function isValid(s: string): boolean {
+  if (s.length == 1) return false;
+  const stack: string[] = [];
+  const map = {
+    "{": "}",
+    "(": ")",
+    "[": "]",
+  };
+
+  for (let char of s) {
+    // nếu là kí tự mở ngoặc
+    if (char in map) {
+      stack.push(char);
+    } else {
+      const lastOpening = stack.pop() || "";
+      if (char !== map[lastOpening]) {
+        return false;
+      }
+    }
+  }
+
+  return stack.length ? false : true;
+}
