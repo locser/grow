@@ -202,3 +202,44 @@ function isValid(s: string): boolean {
 
   return stack.length ? false : true;
 }
+
+// https://leetcode.com/problems/to-be-or-not-to-be/
+type ToBeOrNotToBe = {
+  toBe: (val: any) => boolean;
+  notToBe: (val: any) => boolean;
+};
+
+function expect(val: any): ToBeOrNotToBe {
+  return {
+    toBe: (val2: any) => {
+      if (val === val2) return true;
+      throw new Error("Not Equal");
+    },
+    notToBe: (val2: any) => {
+      if (val !== val2) return true;
+      throw new Error("Equal");
+    },
+  };
+}
+
+/**
+ * expect(5).toBe(5); // true
+ * expect(5).notToBe(5); // throws "Equal"
+ */
+
+// https://leetcode.com/problems/make-three-strings-equal/submissions/1613045438/
+
+function findMinimumOperations(s1: string, s2: string, s3: string): number {
+  if (!s1.length || !s2.length || !s3.length) return -1;
+
+  let count = 0;
+  const minLength = Math.min(s1.length, s2.length, s3.length);
+
+  for (let i = 0; i < minLength; i++) {
+    if (s1[i] == s2[i] && s2[i] == s3[i]) {
+      count++;
+    } else break;
+  }
+
+  return count > 0 ? s1.length + s2.length + s3.length - 3 * count : -1;
+}
