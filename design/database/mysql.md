@@ -423,3 +423,617 @@ AND price > 100;
 
 Understanding EXPLAIN types helps in query optimization by showing how MySQL executes your queries and where improvements can be made through proper indexing or query restructuring.
 ```
+
+Rất hay, đây là phần **cốt lõi** trong việc tối ưu hiệu suất cho hệ thống có nhiều truy cập song song. Dưới đây là giải thích rõ ràng và dễ nhớ về **4 mức độ cô lập trong Transaction** (Isolation Levels) trong MySQL, kèm theo so sánh về **hiệu suất** và **độ an toàn dữ liệu**.
+
+---
+
+## 📊 Bảng tổng quan 4 mức độ Isolation
+
+| Mức độ isolation     | Hiện tượng tránh được                                      | Hiệu suất     | Ghi chú                             |
+| -------------------- | ---------------------------------------------------------- | ------------- | ----------------------------------- |
+| **READ UNCOMMITTED** | ❌ Dirty Read                                              | 🔥 Rất nhanh  | Không an toàn                       |
+| **READ COMMITTED**   | ✅ Dirty Read<br>❌ Non-repeatable Read                    | ⚡ Nhanh      | Mức phổ biến (Oracle dùng mặc định) |
+| **REPEATABLE READ**  | ✅ Dirty + Non-repeatable<br>❌ Phantom Read (trong MySQL) | 🟡 Trung bình | Mặc định của MySQL InnoDB           |
+| **SERIALIZABLE**     | ✅ Mọi hiện tượng                                          | 🐢 Chậm nhất  | Khóa toàn bảng, ít dùng thực tế     |
+
+---
+
+## 🔍 Giải thích chi tiết từng mức
+
+---
+
+### 1. 🔴 **READ UNCOMMITTED** (Đọc chưa commit)
+
+- **Cho phép đọc dữ liệu chưa commit** từ transaction khác.
+- **Rất nhanh** → gần như không có khóa.
+- Rất **dễ lỗi logic, tính toán sai**.
+
+🧠 Ví dụ: Bạn đọc số dư từ A = 1,000, nhưng ngay sau đó transaction kia rollback → thực tế số dư không thay đổi.
+
+---
+
+### 2. 🟠 **READ COMMITTED** (Đọc đã commit)
+
+- **Không đọc dữ liệu chưa commit.**
+- Nhưng có thể **đọc dữ liệu khác nhau giữa 2 lần truy vấn** nếu transaction khác commit vào giữa.
+
+🧠 Ví dụ: Bạn đọc số dư = 1,000, sau đó đọc lại thấy = 500 vì transaction khác đã commit thay đổi.
+
+📈 **Tốt cho hiệu suất, an toàn hơn**, phổ biến trong các hệ quản trị như Oracle.
+
+---
+
+### 3. 🟡 **REPEATABLE READ** (Đọc lặp lại được)
+
+- **Mỗi lần đọc cùng 1 bản ghi → kết quả giống nhau**, ngay cả khi transaction khác thay đổi và commit.
+- Tránh **Dirty Read + Non-repeatable Read**.
+- MySQL có thêm cơ chế ngăn **Phantom Read** bằng **Next-Key Locking** → khá mạnh.
+
+🧠 Ví dụ: Bạn đọc danh sách đơn hàng 2 lần → không thay đổi dù người khác thêm đơn hàng.
+
+📌 **Đây là mặc định của MySQL InnoDB.**
+
+---
+
+### 4. 🔵 **SERIALIZABLE** (Tuần tự hóa)
+
+- Giao dịch chạy **theo thứ tự** như thể không có transaction đồng thời.
+- **Khóa toàn bộ bảng**, không chỉ từng dòng.
+- **An toàn tuyệt đối**, nhưng **rất chậm**.
+
+🧠 Ví dụ: Mọi transaction thực hiện **lần lượt từng cái một** → như xếp hàng.
+
+---
+
+## ✅ Tóm tắt so sánh hiệu suất & độ an toàn
+
+| Isolation Level  | An toàn       | Hiệu suất     |
+| ---------------- | ------------- | ------------- |
+| READ UNCOMMITTED | ❌ Tệ         | ✅ Tốt nhất   |
+| READ COMMITTED   | 🟠 Trung bình | ✅ Tốt        |
+| REPEATABLE READ  | ✅ Tốt        | 🟡 Trung bình |
+| SERIALIZABLE     | ✅ Tốt nhất   | ❌ Tệ nhất    |
+
+---
+
+### ⚙️ Cách đặt isolation level trong MySQL:
+
+```sql
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+START TRANSACTION;
+-- các câu lệnh SQL ở đây
+COMMIT;
+```
+
+---
+
+Tuyệt vời, nếu bạn muốn **"làm chủ MySQL với JSON"**, thì dưới đây là **tổng hợp đầy đủ, thực chiến và dễ hiểu nhất** về cách làm việc với **kiểu dữ liệu `JSON` trong MySQL** (từ MySQL 5.7 trở lên).
+
+---
+
+## 🧱 1. Khai báo cột JSON
+
+```sql
+CREATE TABLE users (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100),
+  profile JSON
+);
+```
+
+---
+
+## 📥 2. Chèn dữ liệu JSON
+
+```sql
+INSERT INTO users (name, profile)
+VALUES ('Alice', JSON_OBJECT('age', 25, 'city', 'Hanoi'));
+```
+
+Hoặc dùng chuỗi JSON trực tiếp:
+
+```sql
+INSERT INTO users (name, profile)
+VALUES ('Bob', '{"age":30, "city":"HCM"}');
+```
+
+---
+
+## 🔍 3. Truy vấn dữ liệu JSON
+
+### ✅ Truy xuất giá trị trong JSON
+
+```sql
+SELECT
+  name,
+  profile->'$.age' AS age
+FROM users;
+```
+
+- `->` trả về giá trị JSON
+- `->>` trả về **giá trị dạng văn bản (text)**
+
+```sql
+SELECT
+  name,
+  profile->>'$.city' AS city_text
+FROM users;
+```
+
+---
+
+### 📌 Cú pháp đường dẫn JSON
+
+| Cú pháp          | Ý nghĩa                |
+| ---------------- | ---------------------- |
+| `$`              | Gốc của JSON           |
+| `$.age`          | Truy cập trường `age`  |
+| `$.address.city` | Truy cập nested object |
+| `$[0]`           | Truy cập mảng          |
+
+---
+
+## 🛠 4. Cập nhật giá trị trong JSON
+
+```sql
+UPDATE users
+SET profile = JSON_SET(profile, '$.age', 28)
+WHERE name = 'Alice';
+```
+
+| Hàm            | Ý nghĩa                       |
+| -------------- | ----------------------------- |
+| `JSON_SET`     | Thêm hoặc cập nhật giá trị    |
+| `JSON_REPLACE` | Chỉ cập nhật nếu khóa tồn tại |
+| `JSON_REMOVE`  | Xóa khóa khỏi JSON            |
+
+---
+
+## 🔍 5. Tìm kiếm trong JSON
+
+### ✅ Tìm người có tuổi > 25:
+
+```sql
+SELECT * FROM users
+WHERE JSON_EXTRACT(profile, '$.age') > 25;
+```
+
+### ✅ Hoặc dạng chuỗi:
+
+```sql
+SELECT * FROM users
+WHERE CAST(profile->>'$.age' AS UNSIGNED) > 25;
+```
+
+---
+
+## 🔎 6. Chỉ mục cho JSON
+
+Bạn **không thể index trực tiếp cột JSON**, nhưng có thể dùng **generated columns**:
+
+```sql
+ALTER TABLE users
+ADD age INT GENERATED ALWAYS AS (JSON_UNQUOTE(profile->'$.age')) STORED,
+ADD INDEX idx_age(age);
+```
+
+➡️ Từ đó truy vấn nhanh hơn.
+
+---
+
+## 🧠 7. Một số hàm JSON hữu ích
+
+| Hàm               | Mục đích                              |
+| ----------------- | ------------------------------------- |
+| `JSON_OBJECT()`   | Tạo object JSON                       |
+| `JSON_ARRAY()`    | Tạo mảng JSON                         |
+| `JSON_EXTRACT()`  | Truy xuất giá trị                     |
+| `JSON_SET()`      | Thêm / cập nhật giá trị               |
+| `JSON_REMOVE()`   | Xóa trường                            |
+| `JSON_CONTAINS()` | Kiểm tra có chứa giá trị hay không    |
+| `JSON_KEYS()`     | Trả về danh sách các key trong object |
+
+---
+
+## ✅ Tổng kết
+
+JSON trong MySQL cực kỳ mạnh khi:
+
+- Bạn cần lưu dữ liệu **có cấu trúc linh hoạt** (vd: cấu hình, metadata, quyền,...)
+- Kết hợp với **generated columns** để tối ưu hiệu suất.
+
+---
+
+## Deadlock trong MySQL
+
+Deadlock là tình trạng hai hoặc nhiều transaction bị khóa lẫn nhau, mỗi transaction đang chờ tài nguyên mà transaction khác đang giữ, dẫn đến tất cả đều không thể tiếp tục.
+
+### 1. Cơ chế Deadlock
+
+- **Định nghĩa**: Hai transaction không thể tiếp tục vì mỗi bên đang chờ tài nguyên mà bên kia đang giữ
+- **Hậu quả**: MySQL sẽ tự động phát hiện và hủy một transaction để giải phóng deadlock
+- **Thông báo lỗi**: `ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction`
+
+### 2. Ví dụ minh họa Deadlock
+
+#### Kịch bản: Hai transaction cập nhật hai hàng theo thứ tự khác nhau
+
+**Chuẩn bị dữ liệu:**
+
+```sql
+CREATE TABLE accounts (
+  id INT PRIMARY KEY,
+  name VARCHAR(100),
+  balance DECIMAL(10,2)
+);
+
+INSERT INTO accounts VALUES (1, 'Alice', 1000);
+INSERT INTO accounts VALUES (2, 'Bob', 2000);
+```
+
+**Transaction 1:**
+
+```sql
+-- Session 1
+START TRANSACTION;
+-- Bước 1: Cập nhật tài khoản Alice
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+-- Đợi một chút...
+-- Bước 2: Cập nhật tài khoản Bob
+UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+COMMIT;
+```
+
+**Transaction 2 (chạy đồng thời):**
+
+```sql
+-- Session 2
+START TRANSACTION;
+-- Bước 1: Cập nhật tài khoản Bob
+UPDATE accounts SET balance = balance - 200 WHERE id = 2;
+-- Đợi một chút...
+-- Bước 2: Cập nhật tài khoản Alice
+UPDATE accounts SET balance = balance + 200 WHERE id = 1;
+COMMIT;
+```
+
+**Diễn biến deadlock:**
+
+1. Transaction 1 khóa hàng id=1
+2. Transaction 2 khóa hàng id=2
+3. Transaction 1 cố gắng khóa hàng id=2 → phải chờ vì Transaction 2 đang giữ
+4. Transaction 2 cố gắng khóa hàng id=1 → phải chờ vì Transaction 1 đang giữ
+5. Deadlock xảy ra! MySQL phát hiện và hủy một trong hai transaction
+
+### 3. Cách phòng tránh Deadlock
+
+1. **Thống nhất thứ tự truy cập**
+
+   ```sql
+   -- Luôn cập nhật tài khoản có id nhỏ hơn trước
+   START TRANSACTION;
+   UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+   UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+   COMMIT;
+   ```
+
+2. **Sử dụng khóa với SELECT ... FOR UPDATE**
+
+   ```sql
+   START TRANSACTION;
+   -- Khóa cả hai hàng ngay từ đầu
+   SELECT * FROM accounts WHERE id IN (1, 2) FOR UPDATE;
+   -- Thực hiện cập nhật an toàn
+   UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+   UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+   COMMIT;
+   ```
+
+3. **Giảm kích thước transaction**
+
+   - Giữ transaction ngắn gọn
+   - Tránh chờ đợi input từ người dùng trong transaction
+
+4. **Sử dụng timeout và retry**
+
+   ```sql
+   SET innodb_lock_wait_timeout = 50; -- Đặt timeout (giây)
+
+   -- Trong ứng dụng, thêm logic retry
+   START TRANSACTION;
+   -- Nếu gặp deadlock, thử lại transaction
+   COMMIT;
+   ```
+
+### 4. Kiểm tra và phân tích Deadlock
+
+```sql
+-- Xem thông tin deadlock gần nhất
+SHOW ENGINE INNODB STATUS;
+
+-- Tìm kiếm trong log
+-- Phần "LATEST DETECTED DEADLOCK" chứa thông tin chi tiết
+```
+
+### 5. Deadlock trong các tình huống phức tạp
+
+- **Khóa gap**: Xảy ra khi sử dụng isolation level REPEATABLE READ
+- **Khóa ẩn**: Từ các ràng buộc như foreign key
+- **Hot spots**: Nhiều transaction cạnh tranh cùng một hàng (ví dụ: bộ đếm)
+
+## Debezium
+
+# Đồng bộ dữ liệu MySQL to Kafka sử dụng Debezium
+
+## 1. Tổng quan về Debezium
+
+### 1.1 Debezium là gì?
+
+Debezium là một nền tảng CDC (Change Data Capture) mã nguồn mở, theo dõi thay đổi trong cơ sở dữ liệu và phát các sự kiện thay đổi đến Kafka theo thời gian thực.
+
+### 1.2 Luồng dữ liệu
+
+```
+[MySQL] --binlog--> [Debezium Connector] --> [Kafka Topic] --> [Consumer/Sink]
+```
+
+### 1.3 Ưu điểm
+
+- **Realtime**: Phát hiện và truyền thay đổi gần như ngay lập tức
+- **Không xâm lấn**: Không cần sửa đổi ứng dụng nguồn
+- **Đáng tin cậy**: Đảm bảo không mất dữ liệu, xử lý lỗi tốt
+- **Khả năng mở rộng**: Xử lý hàng triệu sự kiện mỗi giây
+
+## 2. Chuẩn bị môi trường
+
+### 2.1 Yêu cầu hệ thống
+
+- MySQL 5.7+ với binlog định dạng ROW
+- Apache Kafka và Zookeeper
+- Kafka Connect framework
+- Debezium MySQL Connector
+
+### 2.2 Cấu hình MySQL
+
+```sql
+-- Đảm bảo binlog được bật và đúng định dạng
+[mysqld]
+server-id         = 1
+log_bin           = mysql-bin
+binlog_format     = ROW
+binlog_row_image  = FULL
+expire_logs_days  = 10
+```
+
+### 2.3 Tạo user MySQL cho Debezium
+
+```sql
+CREATE USER 'debezium'@'%' IDENTIFIED BY 'dbz_password';
+GRANT SELECT, RELOAD, SHOW DATABASES, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'debezium'@'%';
+FLUSH PRIVILEGES;
+```
+
+## 3. Triển khai Debezium với Docker Compose
+
+### 3.1 Docker Compose file
+
+```yaml
+version: "3"
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  connect:
+    image: debezium/connect:latest
+    depends_on:
+      - kafka
+      - mysql
+    ports:
+      - "8083:8083"
+    environment:
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      STATUS_STORAGE_TOPIC: connect_statuses
+      BOOTSTRAP_SERVERS: kafka:29092
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      KEY_CONVERTER_SCHEMAS_ENABLE: "true"
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "true"
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: debezium
+      MYSQL_PASSWORD: dbz_password
+      MYSQL_DATABASE: inventory
+    command: --server-id=1 --log-bin=mysql-bin --binlog-format=ROW
+```
+
+## 4. Cấu hình Debezium Connector cho N Tables
+
+### 4.1 Cấu hình cơ bản cho một database
+
+```json
+{
+  "name": "inventory-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+    "database.hostname": "mysql",
+    "database.port": "3306",
+    "database.user": "debezium",
+    "database.password": "dbz_password",
+    "database.server.id": "1",
+    "database.server.name": "mysql-server-1",
+    "database.include.list": "inventory",
+    "database.history.kafka.bootstrap.servers": "kafka:29092",
+    "database.history.kafka.topic": "schema-changes.inventory",
+    "include.schema.changes": "true",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter"
+  }
+}
+```
+
+### 4.2 Cấu hình cho nhiều tables cụ thể
+
+```json
+{
+  "name": "multi-table-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+    "database.hostname": "mysql",
+    "database.port": "3306",
+    "database.user": "debezium",
+    "database.password": "dbz_password",
+    "database.server.id": "1",
+    "database.server.name": "mysql-server-1",
+    "database.include.list": "inventory,customers,orders",
+    "table.include.list": "inventory.products,customers.users,orders.order_items",
+    "database.history.kafka.bootstrap.servers": "kafka:29092",
+    "database.history.kafka.topic": "schema-changes.multi-db",
+    "include.schema.changes": "true",
+    "transforms": "unwrap",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.drop.tombstones": "false"
+  }
+}
+```
+
+### 4.3 Triển khai connector
+
+```bash
+curl -X POST -H "Content-Type: application/json" --data @connector-config.json http://localhost:8083/connectors
+```
+
+## 5. Tối ưu hiệu suất cho hệ thống lớn
+
+### 5.1 Phân vùng Connector
+
+- Tạo nhiều connector cho các database/table khác nhau
+- Phân chia tải trên nhiều Kafka Connect worker
+
+### 5.2 Cấu hình Kafka
+
+```properties
+# Tăng số lượng partition cho topic
+num.partitions=16
+
+# Tăng kích thước batch
+batch.size=131072
+
+# Tăng bộ nhớ đệm
+buffer.memory=67108864
+
+# Tăng thời gian linger để gom batch
+linger.ms=5
+```
+
+### 5.3 Cấu hình MySQL
+
+```ini
+# Tăng kích thước binlog cache
+binlog_cache_size=4M
+
+# Tăng thời gian lưu trữ binlog
+expire_logs_days=7
+
+# Tối ưu InnoDB
+innodb_buffer_pool_size=4G
+innodb_log_file_size=1G
+```
+
+## 6. Giám sát và xử lý lỗi
+
+### 6.1 Giám sát Debezium
+
+- Sử dụng JMX metrics từ Kafka Connect
+- Theo dõi lag giữa binlog và Kafka
+- Kiểm tra trạng thái connector:
+
+```bash
+curl -X GET http://localhost:8083/connectors/inventory-connector/status
+```
+
+### 6.2 Xử lý lỗi phổ biến
+
+- **Schema change**: Cấu hình `include.schema.changes=true`
+- **Binlog purged**: Đảm bảo binlog không bị xóa trước khi xử lý
+- **Connection timeout**: Cấu hình `connect.timeout.ms` và `connection.attempts`
+
+## 7. Mô hình triển khai cho hệ thống production
+
+### 7.1 Kiến trúc High Availability
+
+```
+[MySQL Master] <--> [MySQL Replica]
+      |                   |
+[Debezium 1]         [Debezium 2] (standby)
+      |                   |
+[Kafka Cluster] <--> [Kafka Connect Cluster]
+      |
+[Consumers/Applications]
+```
+
+### 7.2 Chiến lược backup và khôi phục
+
+- Lưu trữ offset Kafka
+- Backup cấu hình connector
+- Kế hoạch khôi phục từ điểm checkpoint
+
+## 8. Ví dụ thực tế: Đồng bộ dữ liệu từ MySQL sang Elasticsearch
+
+### 8.1 Cấu hình Kafka Connect Elasticsearch Sink
+
+```json
+{
+  "name": "elasticsearch-sink",
+  "config": {
+    "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+    "topics": "mysql-server-1.inventory.products",
+    "connection.url": "http://elasticsearch:9200",
+    "type.name": "_doc",
+    "key.ignore": "false",
+    "schema.ignore": "true",
+    "behavior.on.null.values": "delete",
+    "transforms": "unwrap,key",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.key.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+    "transforms.key.field": "id"
+  }
+}
+```
+
+### 8.2 Kiểm tra luồng dữ liệu end-to-end
+
+1. Thêm/sửa/xóa dữ liệu trong MySQL
+2. Xác nhận sự kiện trong Kafka topic
+   ```bash
+   kafka-console-consumer --bootstrap-server localhost:9092 --topic mysql-server-1.inventory.products --from-beginning
+   ```
+3. Kiểm tra dữ liệu đã được cập nhật trong Elasticsearch
+   ```bash
+   curl -X GET "http://localhost:9200/mysql-server-1.inventory.products/_search?pretty"
+   ```

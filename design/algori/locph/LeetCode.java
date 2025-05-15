@@ -428,7 +428,7 @@ public class LeetCode {
         return dummy.next;
     }
 
-    //https://leetcode.com/problems/minimum-operations-to-make-array-values-equal-to-k/?envType=daily-question&envId=2025-04-09
+    // https://leetcode.com/problems/minimum-operations-to-make-array-values-equal-to-k/?envType=daily-question&envId=2025-04-09
     public int minOperations(int[] nums, int k) {
         Set<Integer> st = new HashSet<>();
         for (int x : nums) {
@@ -441,8 +441,6 @@ public class LeetCode {
         return st.size();
     }
 
-
-
     public static void main(String[] args) {
         LeetCode lc = new LeetCode();
         // int[] nums = {3, 2, 3, 2, 2, 2};
@@ -450,5 +448,39 @@ public class LeetCode {
 
         int[] nums = { 1, 3, 8, 48, 10 };
         System.out.println(lc.longestNiceSubarray(nums));
+    }
+
+    // https://leetcode.com/problems/percentage-of-letter-in-string/?envType=problem-list-v2&envId=2cf6vun6
+    public int percentageLetter(String s, char letter) {
+        int count = 0;
+
+        for (char c : s.toCharArray()) {
+            if (c == letter) {
+                count++;
+            }
+        }
+
+        return (int) ((double) count / s.length() * 100);
+    }
+
+    // https://leetcode.com/problems/maximum-count-of-positive-integer-and-negative-integer/?envType=problem-list-v2&envId=2cf6vun6
+    public int maximumCount(int[] nums) {
+        int count0 = 0;
+        int countNegative = 0;
+        for (int i = 0; i < nums.length; i++) {
+            if (nums[i] > 0) {
+                break;
+            }
+
+            if (nums[i] == 0) {
+                count0++;
+            }
+
+            else {
+                countNegative++;
+            }
+        }
+
+        return Math.max(countNegative, nums.length - count0 - countNegative);
     }
 }
