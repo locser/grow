@@ -28,8 +28,6 @@ public class LeetCodeMay {
                 uniqueChars.add(c);
             }
 
-            System.out.println(uniqueChars);
-
             // Chuyển Set thành String
             StringBuilder sb = new StringBuilder();
             for (char c : uniqueChars) {

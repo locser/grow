@@ -13,11 +13,20 @@ class _Node {
 class ListNode {
   val: number;
   next: ListNode | null;
+
   constructor(val?: number, next?: ListNode | null) {
     this.val = val === undefined ? 0 : val;
     this.next = next === undefined ? null : next;
   }
 }
+
+
+// https://leetcode.com/problems/add-to-array-form-of-integer/
+function addToArrayForm(num: number[], k: number): number[] {
+  const n = BigInt(num.join(''));
+
+  return (n + BigInt(k)).toString().split('').map(Number);
+};
 
 // https://leetcode.com/explore/learn/card/linked-list/213/conclusion/1229/
 function copyRandomList(head: _Node | null): _Node | null {
@@ -164,8 +173,8 @@ function romanToInt(s: string): number {
 function longestCommonPrefix(strs: string[]): string {
   if (strs.length === 1) return strs[0];
   const shortestLength = strs.reduce(
-    (minLength, currentString) => Math.min(minLength, currentString.length),
-    Infinity
+      (minLength, currentString) => Math.min(minLength, currentString.length),
+      Infinity
   );
 
   for (let i = shortestLength; i > 0; i--) {

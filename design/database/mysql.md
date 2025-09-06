@@ -1037,3 +1037,108 @@ curl -X GET http://localhost:8083/connectors/inventory-connector/status
    ```bash
    curl -X GET "http://localhost:9200/mysql-server-1.inventory.products/_search?pretty"
    ```
+
+
+
+INDEX FULL TEXT SEARCH 
+
+ SELECT SQL_NO_CACHE * FROM ttl_customer_beta.leads where search_value_normalized LIKE "nguyen vinh trinh%";
+-- 1 row(s) fetched - 0.146s, on 2025-07-17 at 17:42:29
+ EXPLAIN  SELECT SQL_NO_CACHE * FROM ttl_customer_beta.leads where search_value_normalized LIKE "nguyen vinh trinh%";
+
+
+SELECT SQL_NO_CACHE * FROM ttl_customer_beta.leads where search_value_normalized LIKE "%nguyen vinh trinh%";
+-- 1 row(s) fetched - 3.150s (0.001s fetch), on 2025-07-17 at 17:42:51
+EXPLAIN SELECT SQL_NO_CACHE * FROM ttl_customer_beta.leads where search_value_normalized LIKE "%nguyen vinh trinh%";
+
+
+explain SELECT SQL_NO_CACHE * FROM ttl_customer_beta.leads where search_value_normalized LIKE "%0962535296%";
+
+
+SELECT SQL_NO_CACHE * FROM ttl_customer_beta.leads where MATCH(search_value_normalized) AGAINST('"nguyen vinh trinh"');
+-- 1 row(s) fetched - 0.825s, on 2025-07-17 at 17:47:17
+## 🔍 **GIẢI THÍCH TẠI SAO MYSQL FULL-TEXT SEARCH KHÔNG MATCH CHÍNH XÁC**
+
+Vấn đề này xảy ra do cách **MySQL Full-Text Search** hoạt động khác với **exact string matching**. Tôi sẽ giải thích chi tiết:
+
+## 📋 **NGUYÊN NHÂN CHÍNH**
+
+### **1. Full-Text Search Mode**
+
+Khi bạn dùng:
+```sql
+MATCH(search_value_normalized) AGAINST("nguyen vinh trinh")
+```
+
+MySQL mặc định sử dụng **Natural Language Mode**, tìm kiếm theo **relevance scoring** chứ không phải exact match.
+
+### **2. Tokenization Process**
+
+```sql
+-- Query của bạn được tokenize thành:
+"nguyen vinh trinh" → ["nguyen", "vinh", "trinh"]
+
+-- Dữ liệu trong DB:
+"nguyen thanh vinh | 0986798358" → ["nguyen", "thanh", "vinh", "0986798358"]
+
+-- Match Score:
+-- ✅ "nguyen" matches
+-- ❌ "thanh" không match "vinh" position
+-- ✅ "vinh" matches  
+-- ❌ "trinh" không match
+
+-- Kết quả: Vẫn có relevance score > 0 nên được trả về
+```
+
+## 🛠 **CÁCH KHẮC PHỤC**
+
+### **Solution 1: Boolean Mode với AND operator**
+
+```sql
+-- Force tất cả từ phải có mặt
+SELECT *, MATCH(search_value_normalized) AGAINST('+nguyen +vinh +trinh' IN BOOLEAN MODE) as relevance
+FROM ttl_customer_beta.leads 
+WHERE MATCH(search_value_normalized) AGAINST('+nguyen +vinh +trinh' IN BOOLEAN MODE)
+ORDER BY relevance DESC;
+```
+
+### **Solution 2: Phrase Search (Exact sequence)**
+
+```sql
+-- Tìm exact phrase
+SELECT *, MATCH(search_value_normalized) AGAINST('"nguyen vinh trinh"' IN BOOLEAN MODE) as relevance
+FROM ttl_customer_beta.leads 
+WHERE MATCH(search_value_normalized) AGAINST('"nguyen vinh trinh"' IN BOOLEAN MODE)
+ORDER BY relevance DESC;
+```
+
+### **Solution 3: Hybrid Approach - Multi-tier Search**## 💡 **TÓM LẠI VẤN ĐỀ CỦA BẠN**
+
+### **Tại sao "nguyen thanh vinh" xuất hiện trong kết quả:**
+
+```sql
+-- Query của bạn:
+MATCH(search_value_normalized) AGAINST("nguyen vinh trinh")
+
+-- MySQL hiểu như sau:
+-- "Tìm documents có chứa các từ: nguyen, vinh, trinh"
+-- "Không cần theo thứ tự, không cần đầy đủ"
+
+-- Document: "nguyen thanh vinh | 0986798358"
+-- Chứa: ✅ "nguyen", ❌ "vinh" (có), ❌ "trinh" (không có)
+-- Nhưng vẫn có relevance score > 0 nên được trả về
+```
+
+### **Quick Fix:**
+
+```sql
+-- Thay vì:
+MATCH(search_value_normalized) AGAINST("nguyen vinh trinh")
+
+-- Dùng:
+MATCH(search_value_normalized) AGAINST('+nguyen +vinh +trinh' IN BOOLEAN MODE)
+-- Hoặc:
+MATCH(search_value_normalized) AGAINST('"nguyen vinh trinh"' IN BOOLEAN MODE)
+```
+
+**Kết quả:** Chỉ trả về records có **tất cả các từ** hoặc **exact phrase** mà bạn tìm kiếm! 🎯
