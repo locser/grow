@@ -1,4 +1,76 @@
 /**
+https://leetcode.com/problems/maximum-height-of-a-triangle/?envType=problem-list-v2&envId=2cf6vun6
+    độ dài lớn nhất của 1 cạnh tam giác xếp bởi red và blue
+Constraints:
+
+1 <= red, blue <= 100
+ */
+
+function maxHeightOfTriangle(red: number, blue: number): number {
+  let i = 1;
+
+  let red2 = red,
+    blue2 = blue;
+
+  for (i = 1; i <= 100; i++) {
+    console.log("i+1", i + 1, " red", red, " blue", blue);
+    if (i % 2 !== 0) {
+      blue = blue - i;
+      if (red < i + 1) {
+        console.log("red", red);
+        break;
+      }
+    } else {
+      red -= i;
+      if (blue < i + 1) {
+        console.log("blue", blue);
+        break;
+      }
+    }
+  }
+
+  let j = 1;
+
+  for (j = 1; j <= 100; j++) {
+    console.log("i+1", i + 1, " red2", red2, " blue", blue2);
+    if (j % 2 !== 0) {
+      red2 -= j;
+      if (blue2 < j + 1) {
+        break;
+      }
+    } else {
+      blue2 -= j;
+      if (red2 < j + 1) {
+        break;
+      }
+    }
+  }
+
+  console.log(i, j);
+
+  return Math.max(i, j);
+}
+
+console.log("kq", maxHeightOfTriangle(4, 9));
+
+console.log(maxHeightOfTriangle(2, 4));
+
+/**
+https://leetcode.com/problems/maximum-difference-between-adjacent-elements-in-a-circular-array/?envType=problem-list-v2&envId=2cf6vun6
+ */
+function maxAdjacentDistance(nums: number[]): number {
+  let max = 0;
+
+  nums.push(nums[0]);
+
+  for (let i = 0; i < nums.length - 1; i++) {
+    max = Math.max(Math.abs(nums[i] - nums[i + 1]), max);
+  }
+
+  return max;
+}
+
+/**
 https://leetcode.com/problems/surface-area-of-3d-shapes/submissions/1762541004/?envType=problem-list-v2&envId=2cf6vun6
     mỗi một cột có thể tính bằng phương thức 2+ v *4 (với 2 là 2 mặt đáy và v là số lượng stack của cột)
 
